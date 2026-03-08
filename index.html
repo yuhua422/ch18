@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小學國語句型排列練習全集</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+        }
+        .sidebar-item.active {
+            background-color: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 12px -2px rgba(59, 130, 246, 0.4);
+        }
+        .glass-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        .word-chip {
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+        .word-chip:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+        .word-chip:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800">
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- 左側導覽 -->
+        <aside class="w-72 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                <h1 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                    <span class="text-blue-600">📘</span> 句型練習全集
+                </h1>
+                <p class="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest">Mastery Edition</p>
+            </div>
+            <nav class="flex-1 overflow-y-auto p-4 space-y-2" id="sidebar-nav">
+                <!-- JS 動態生成 -->
+            </nav>
+        </aside>
+
+        <!-- 右側主畫面 -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-10 bg-[#f1f5f9]">
+            <div id="content-area" class="max-w-4xl mx-auto">
+                <!-- 歡迎畫面 -->
+                <div id="welcome-screen" class="text-center py-32">
+                    <div class="inline-block p-8 bg-white rounded-full shadow-sm mb-6">
+                        <span class="text-7xl">🎒</span>
+                    </div>
+                    <h2 class="text-3xl font-black text-slate-700">選擇課次開始練習</h2>
+                    <p class="text-slate-400 mt-4 font-medium text-lg">依照例句邏輯，將語詞排列成正確的句子</p>
+                </div>
+
+                <!-- 內容標題 -->
+                <div id="lesson-header" class="hidden mb-10">
+                    <div class="flex items-baseline gap-4">
+                        <span id="lesson-num-label" class="text-blue-600 font-black text-xl">L</span>
+                        <h2 id="lesson-title" class="text-4xl font-black text-slate-900 tracking-tight"></h2>
+                    </div>
+                    <div class="h-1.5 w-24 bg-blue-500 mt-4 rounded-full"></div>
+                </div>
+
+                <!-- 互動卡片容器 -->
+                <div id="cards-container" class="grid grid-cols-1 gap-12 pb-24">
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const lessonData = {
+            1: {
+                title: "種子旅行真奇妙",
+                items: [
+                    { type: "句型練習", structure: "如果……就……", desc: "表示假設關係，前句是假設，後句是結果。", original: "如果風兒輕輕吹，種子就能飛呀飛。", example: "如果大雨一直下，我們就不能到操場跑步。", pool: ["如果", "大雨", "一直下，", "我們", "就不能", "到操場", "跑步。"] }
+                ]
+            },
+            2: {
+                title: "小水滴愛上探險",
+                items: [
+                    { type: "造句練習", structure: "「被」字句", desc: "表達被動情境，說明受詞遭受某事。", original: "波波被甩到大樹上。", example: "點心被弟弟吃光了。", pool: ["點心", "被", "弟弟", "吃光了。"] },
+                    { type: "造句練習", structure: "「把」字句", desc: "說明主動者對對象做了某事。", original: "太陽公公把波波帶回天空。", example: "姐姐把水壺放進書包。", pool: ["姐姐", "把", "水壺", "放進", "書包。"] },
+                    { type: "句型練習", structure: "像……一樣……", desc: "表達兩個事物具備相似的性質。", original: "我落在大大的荷葉上，像珍珠一樣滾來滾去。", example: "弟弟在公園裡，像小狗一樣跑來跑去。", pool: ["弟弟", "在公園裡，", "像小狗", "一樣", "跑來跑去。"] }
+                ]
+            },
+            3: {
+                title: "紫斑蝶向北飛",
+                items: [
+                    { type: "句型練習", structure: "當……的時候，終於……", desc: "表示兩件事同時發生，且經歷過一段時間。", original: "當陽光照進樹林的時候，紫斑蝶終於要出發了。", example: "當我回到家的時候，聞到了飯菜的香味。", pool: ["當我", "回到家", "的時候，", "聞到了", "飯菜的", "香味。"] }
+                ]
+            },
+            4: {
+                title: "一場雨",
+                items: [
+                    { type: "造句練習", structure: "到底", desc: "用於疑問句，表示進一步追究原因或結果。", original: "這場雨，到底要下到什麼時候呢？", example: "貓咪到底躲在哪裡？", pool: ["貓咪", "到底", "躲在", "哪裡？"] }
+                ]
+            },
+            5: {
+                title: "笑容回來了",
+                items: [
+                    { type: "造句練習", structure: "於是", desc: "表示接續發生，後事由前事引起。", original: "小羊找不到媽媽，於是哭了起來。", example: "爸爸發現天空烏雲密布，於是帶了一把傘出門。", pool: ["爸爸發現", "天空", "烏雲密布，", "於是帶了", "一把傘", "出門。"] },
+                    { type: "句型練習", structure: "像……也像……", desc: "用兩個相似物形容同一個對象。", original: "彎彎的月亮，像小船，也像鐮刀。", example: "紅紅的蘋果，像臉蛋，也像火球。", pool: ["紅紅的", "蘋果，", "像臉蛋，", "也像", "火球。"] }
+                ]
+            },
+            6: {
+                title: "換名字",
+                items: [
+                    { type: "造句練習", structure: "自從……就……", desc: "表示從某事開始後，情況有了改變。", original: "自從他換了名字，就變得很愛乾淨。", example: "自從我加入棒球隊，就每天認真練習。", pool: ["自從我", "加入", "棒球隊，", "就每天", "認真練習。"] },
+                    { type: "句型練習", structure: "比……更……也更……", desc: "表達程度上的進一步變化。", original: "大家都覺得他的回答比前一次更完整，也更有禮貌了。", example: "今年的夏天比去年更熱了。", pool: ["今年的", "夏天", "比去年", "更熱了。"] }
+                ]
+            },
+            7: {
+                title: "色彩變變變",
+                items: [
+                    { type: "造句練習", structure: "已經", desc: "表示動作或事情已經完成。", original: "她發現有幾種顏色已經用完了。", example: "公園的花已經開了，許多蝴蝶在旁邊飛來飛去。", pool: ["公園的", "花", "已經開了，", "許多蝴蝶", "在旁邊", "飛來飛去。"] },
+                    { type: "句型練習", structure: "為了……", desc: "說明做某事的特定目的。", original: "為了畫出彩虹，姐妹兩人多次把不同的顏料加在一起。", example: "為了出去玩，妹妹今天特別早起。", pool: ["為了", "出去玩，", "妹妹", "今天", "特別早起。"] }
+                ]
+            },
+            8: {
+                title: "孵蛋的男孩",
+                items: [
+                    { type: "造句練習", structure: "突然傳來", desc: "描述極短時間內聽到的聲音。", original: "屋外突然傳來雞叫聲。", example: "教室外面突然傳來一陣歌聲。", pool: ["教室外面", "突然傳來", "一陣", "歌聲。"] },
+                    { type: "句型練習", structure: "……不但……還……", desc: "遞進關係，強調額外的情況。", original: "愛迪生不但不生氣，還繼續做實驗。", example: "小美不但會彈琴，還會跳舞。", pool: ["小美", "不但", "會彈琴，", "還會", "跳舞。"] }
+                ]
+            },
+            9: {
+                title: "愛迪生與電燈",
+                items: [
+                    { type: "造句練習", structure: "除了……還……", desc: "表示除了提到的部分，還有其他的內容。", original: "除了電燈以外，他還發明了許多東西。", example: "書包裡除了課本，還有一支鉛筆。", pool: ["書包裡", "除了", "課本，", "還有一支", "鉛筆。"] },
+                    { type: "句型練習", structure: "經過……終於……", desc: "強調經歷過程後的最終結果。", original: "經過幾個月的努力，他終於找到了適合的材料。", example: "經過老師的說明，我終於了解這題的做法。", pool: ["經過", "老師的", "說明，", "我終於", "了解", "這題的", "做法。"] },
+                    { type: "句型練習", structure: "一……就……", desc: "表示兩件事緊接發生，時間差極短。", original: "愛迪生一看到電燈亮了，就高興的大叫。", example: "他一回家，就先去洗手。", pool: ["他", "一回家，", "就先去", "洗手。"] }
+                ]
+            },
+            10: {
+                title: "小鴨找朋友",
+                items: [
+                    { type: "造句練習", structure: "只好", desc: "表示在無奈下做出的唯一選擇。", original: "沒人跟他一起走，小鴨只好自己去找朋友。", example: "天黑了，我們只好回家。", pool: ["天黑了，", "我們", "只好", "回家。"] }
+                ]
+            },
+            11: {
+                title: "鴿子救火",
+                items: [
+                    { type: "句型練習", structure: "一……就……", desc: "表示兩件事緊接發生。", original: "鴿子媽媽一發現蛋上的裂痕，就心急的到處求救。", example: "他一回家，就先去洗手。", pool: ["他", "一回家，", "就先去", "洗手。"] }
+                ]
+            },
+            12: {
+                title: "吳剛砍桂樹",
+                items: [
+                    { type: "句型練習", structure: "……要……才……", desc: "必須達成特定條件，才有特定結果。", original: "姑娘要吳剛把桂樹先砍倒，才教他減重妙招。", example: "你要寫完功課，才可以去公園玩。", pool: ["你要", "寫完", "功課，", "才可以", "去公園", "玩。"] }
+                ]
+            }
+        };
+
+        let currentActiveItemStates = [];
+
+        function initApp() {
+            const nav = document.getElementById('sidebar-nav');
+            Object.keys(lessonData).forEach(num => {
+                const btn = document.createElement('button');
+                btn.className = "sidebar-item w-full text-left px-5 py-4 rounded-2xl font-bold text-slate-500 hover:bg-white hover:text-blue-600 transition-all flex items-center justify-between group border border-transparent hover:border-slate-100 shadow-sm sm:shadow-none";
+                btn.innerHTML = `<span>第 ${num} 課</span><span class="text-xs opacity-0 group-hover:opacity-100 transition-opacity">→</span>`;
+                btn.onclick = () => selectLesson(num, btn);
+                nav.appendChild(btn);
+            });
+        }
+
+        function shuffle(array) {
+            return [...array].sort(() => Math.random() - 0.5);
+        }
+
+        function selectLesson(num, element) {
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('lesson-header').classList.remove('hidden');
+            document.getElementById('lesson-num-label').innerText = `L${num}`;
+            document.getElementById('lesson-title').innerText = lessonData[num].title;
+
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+            currentActiveItemStates = [];
+
+            lessonData[num].items.forEach((item, idx) => {
+                const state = {
+                    target: item.example.replace(/\s+/g, ''),
+                    pool: shuffle([...item.pool]),
+                    answer: []
+                };
+                currentActiveItemStates.push(state);
+
+                const card = document.createElement('div');
+                card.className = "glass-card rounded-[3rem] p-10 shadow-sm border border-slate-200 bg-white";
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-8">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 px-4 py-1.5 rounded-full border border-blue-100">${item.type}</span>
+                            <h3 class="text-3xl font-black text-slate-800 mt-5">${item.structure}</h3>
+                            <p class="text-slate-500 text-lg mt-3 font-medium leading-relaxed max-w-xl">${item.desc}</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-10">
+                        <div class="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+                            <h4 class="text-xs font-black text-slate-400 mb-3 uppercase tracking-tight flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-slate-300 rounded-full"></span> 課本句型對照
+                            </h4>
+                            <p class="text-slate-700 font-bold text-xl leading-relaxed">${item.original}</p>
+                        </div>
+
+                        <div class="bg-white p-10 rounded-[2.5rem] border-2 border-dashed border-slate-200 min-h-[140px] relative">
+                             <h4 class="text-xs font-black text-blue-400 mb-6 uppercase tracking-wider">句子排列練習（依照結構組合例句）</h4>
+                             <div id="answer-zone-${idx}" class="flex flex-wrap gap-4 relative z-10"></div>
+                        </div>
+
+                        <div class="bg-slate-100/50 p-10 rounded-[2.5rem]">
+                            <div id="pool-zone-${idx}" class="flex flex-wrap gap-4"></div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4">
+                            <div id="msg-${idx}" class="font-black text-lg"></div>
+                            <button onclick="resetExercise(${idx})" class="text-slate-400 hover:text-blue-600 text-sm font-black uppercase tracking-widest transition-colors flex items-center gap-2 group px-4 py-2 rounded-xl hover:bg-blue-50">
+                                <span class="group-hover:rotate-180 transition-transform duration-500">🔄</span> 重置練習
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+                renderZones(idx);
+            });
+        }
+
+        function renderZones(itemIdx) {
+            const state = currentActiveItemStates[itemIdx];
+            const pZone = document.getElementById(`pool-zone-${itemIdx}`);
+            const aZone = document.getElementById(`answer-zone-${itemIdx}`);
+            const msg = document.getElementById(`msg-${itemIdx}`);
+
+            pZone.innerHTML = '';
+            state.pool.forEach((word, wordIdx) => {
+                const chip = document.createElement('div');
+                chip.className = "word-chip bg-white border border-slate-200 px-6 py-4 rounded-2xl text-slate-700 font-bold shadow-sm text-xl";
+                chip.innerText = word;
+                chip.onclick = () => moveToAnswer(itemIdx, wordIdx);
+                pZone.appendChild(chip);
+            });
+
+            aZone.innerHTML = '';
+            if (state.answer.length === 0) {
+                aZone.innerHTML = '<div class="text-slate-300 font-medium py-4 text-xl">點擊下方語詞開始組合句子...</div>';
+            }
+            state.answer.forEach((word, wordIdx) => {
+                const chip = document.createElement('div');
+                chip.className = "word-chip bg-blue-600 text-white px-6 py-4 rounded-2xl font-bold shadow-md shadow-blue-200 text-xl animate-in zoom-in duration-200";
+                chip.innerText = word;
+                chip.onclick = () => moveToPool(itemIdx, wordIdx);
+                aZone.appendChild(chip);
+            });
+
+            const currentSentence = state.answer.join('').replace(/\s+/g, '');
+            if (state.pool.length === 0 && state.answer.length > 0) {
+                if (currentSentence === state.target) {
+                    msg.innerHTML = '<span class="text-emerald-500 flex items-center gap-2">🎉 答對了！你太棒了！</span>';
+                } else {
+                    msg.innerHTML = '<span class="text-rose-500 flex items-center gap-2">🤔 順序不對哦，請再試試看！</span>';
+                }
+            } else {
+                msg.innerText = '';
+            }
+        }
+
+        function moveToAnswer(itemIdx, wordIdx) {
+            const state = currentActiveItemStates[itemIdx];
+            const word = state.pool.splice(wordIdx, 1)[0];
+            state.answer.push(word);
+            renderZones(itemIdx);
+        }
+
+        function moveToPool(itemIdx, wordIdx) {
+            const state = currentActiveItemStates[itemIdx];
+            const word = state.answer.splice(wordIdx, 1)[0];
+            state.pool.push(word);
+            renderZones(itemIdx);
+        }
+
+        function resetExercise(itemIdx) {
+            const activeBtn = document.querySelector('.sidebar-item.active');
+            const num = activeBtn.innerText.match(/\d+/)[0];
+            const originalItem = lessonData[num].items[itemIdx];
+            currentActiveItemStates[itemIdx] = {
+                target: originalItem.example.replace(/\s+/g, ''),
+                pool: shuffle([...originalItem.pool]),
+                answer: []
+            };
+            renderZones(itemIdx);
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
